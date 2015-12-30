@@ -5,23 +5,39 @@
 import os
 import socket
 import winreg
-from uuid import getnode
+from runSystemCommand import *
+import string
 
 def getHostInfo():
-    info = os.environ
-    info['CURRENTPID'] = str(os.getpid())
+    try:
+        info = dict(os.environ)
+    except:
+        info = dict()
+    
+    try:
+        info['CURRENTPID'] = str(os.getpid())
+    except:
+        info['CURRENTPID'] = 'unknown'
 
     # Query registry to find exact Windows version
-    aReg = winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE)    
-    with winreg.OpenKey(aReg, r"SOFTWARE\Microsoft\Windows NT\CurrentVersion") as key:
-        info['OSVERSION'] = winreg.QueryValueEx(key, 'ProductName')[0]
+    try:
+        aReg = winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE)    
+        with winreg.OpenKey(aReg, r"SOFTWARE\Microsoft\Windows NT\CurrentVersion") as key:
+            info['OSVERSION'] = winreg.QueryValueEx(key, 'ProductName')[0]
+    except:
+        info['OSVERSION'] = 'unknown'
         
     # Get networking information
-    # TODO: Get all MAC and IP addresses
-    info['IPADDRESS'] = socket.gethostbyname(socket.gethostname())
-    info['MACADDRESS'] = str(hex(getnode()))[2:]
-    if len(info['MACADDRESS']) == 11:
-        info['MACADDRESS'] = '0' + info['MACADDRESS']
+    info['MAINIP'] = socket.gethostbyname(socket.gethostname())
+    info['IPADDRESS'] = list()
+    info['MACADDRESS'] = list()
+    lines = str.split(str(runSystemCommand(['ipconfig', '/all'])), '\\r\\n')
+    for l in lines:
+        if str.find(l, 'Physical Address') > -1:
+            info['MACADDRESS'].append(str.split(l)[-1])
+        elif str.find(l, 'IPv4 Address') > -1 or str.find(l, 'IPv6 Address') > -1:
+            info['IPADDRESS'].append(str.split(l)[-1].replace('(Preferred)', ''))
+        
     return info
 
 if __name__ == '__main__':

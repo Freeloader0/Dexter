@@ -32,7 +32,8 @@ $RECYCLE.BIN/
 ._*
 
 # Python
-.pyc
+*.pyc
+*.log
 
 # Files that might appear in the root of a volume
 .DocumentRevisions-V100

@@ -21,7 +21,7 @@ def writeLog(message):
     
     # Assert that the log file has been designated
     if 'DEXTERLOG' not in environ.keys():
-        environ['DEXTERLOG'] = str(os.path.join(environ['PUBLIC'], 'dexter.log'))
+        environ['DEXTERLOG'] = str(os.path.join(environ['ALLUSERSPROFILE'], 'dexter.log'))
        
     # Attempt to write to log file
     try:

@@ -35,7 +35,7 @@ def getHostInfo():
     for l in lines:
         if str.find(l, 'Physical Address') > -1:
             info['MACADDRESS'].append(str.split(l)[-1])
-        elif str.find(l, 'IPv4 Address') > -1 or str.find(l, 'IPv6 Address') > -1:
+        elif str.find(l, 'IPv4 Address.') > -1 or str.find(l, 'IPv6 Address.') > -1 or str.find(l, 'IP Address.') > -1:
             info['IPADDRESS'].append(str.split(l)[-1].replace('(Preferred)', ''))
         
     return info

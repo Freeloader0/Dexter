@@ -34,6 +34,7 @@ $RECYCLE.BIN/
 # Python
 *.pyc
 *.log
+__pycache__
 
 # Files that might appear in the root of a volume
 .DocumentRevisions-V100
@@ -49,3 +50,6 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Directory created by Py2Exe
+dist

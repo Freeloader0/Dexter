@@ -7,17 +7,19 @@
 ### runSystemCommand
 ### getHostInfo
 ### dexter.writeLog
+### makeExe
 # Functions TODO:
 ### None :)
 
 import unittest
-import os.path
+import os
+from subprocess import CalledProcessError
 
 # Dexter specific imports
 from dexter import *
 from getHostInfo import *
 from runSystemCommand import *
-from subprocess import CalledProcessError
+from py2ExeSetup import makeExe
 
 
 class testRunSystemCommand(unittest.TestCase):
@@ -44,5 +46,16 @@ class testDexterWriteLog(unittest.TestCase):
         self.assertTrue(os.path.exists(environ['DEXTERLOG']))
 
         
+class testMakeExe(unittest.TestCase):
+
+    def testMakeExe_correct(self):
+        exePath = os.path.join(os.getcwd(), 'dist', 'getHostInfo.exe')
+        if os.path.exists(exePath):
+            os.remove(exePath)
+        newPath = makeExe('getHostInfo.py')
+        self.assertEqual(exePath, newPath)
+        self.assertTrue(os.path.exists(newPath))
+
+        
 if __name__ == '__main__':
-    unittest.main()
+    unittest.main(buffer=True)

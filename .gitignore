@@ -53,3 +53,6 @@ Temporary Items
 
 # Directory created by Py2Exe
 dist
+
+# Local testing file
+hello.py

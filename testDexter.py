@@ -10,6 +10,7 @@
 ### makeExe
 # Functions TODO:
 ### None :)
+#
 
 import unittest
 import os
@@ -34,7 +35,9 @@ class testRunSystemCommand(unittest.TestCase):
 class testGetHostInfo(unittest.TestCase):
 
     def testGetHostInfo_correct(self):
-        self.assertIsInstance(getHostInfo(), dict)
+        info = getHostInfo()
+        self.assertIsInstance(info, dict)
+        self.assertTrue('DEXTERID' in info.keys())
         
         
 class testDexterWriteLog(unittest.TestCase):

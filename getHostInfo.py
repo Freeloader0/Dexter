@@ -7,6 +7,7 @@ import socket
 import winreg
 from runSystemCommand import *
 import string
+import hashlib
 
 def getHostInfo():
     try:
@@ -37,6 +38,9 @@ def getHostInfo():
             info['MACADDRESS'].append(str.strip(str.split(l)[-1], '\\r'))
         elif str.find(l, 'IPv4 Address.') > -1 or str.find(l, 'IPv6 Address.') > -1 or str.find(l, 'IP Address.') > -1:
             info['IPADDRESS'].append(str.strip(str.split(l)[-1].replace('(Preferred)', '').replace('(Deprecated)', ''), '\\r'))
+            
+    # Compute a semi-unique identifier for this host
+    info['DEXTERID'] = hashlib.md5(bytes(str(info['COMPUTERNAME'] + info['USERDOMAIN'] + info['PROCESSOR_IDENTIFIER']), 'utf-8')).hexdigest()
         
     return info
 

@@ -54,5 +54,6 @@ Temporary Items
 # Directory created by Py2Exe
 dist
 
-# Local testing file
+# Local testing files
 hello.py
+servers\server.log

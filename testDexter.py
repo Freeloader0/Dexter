@@ -9,7 +9,8 @@
 ### dexter.writeLog
 ### makeExe
 # Functions TODO:
-### None :)
+### Server comms
+### Client comms
 #
 
 import unittest

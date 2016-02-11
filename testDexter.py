@@ -8,21 +8,23 @@
 ### getHostInfo
 ### dexter.writeLog
 ### makeExe
+### HTTP client comms
 # Functions TODO:
-### Server comms
-### Client comms
+### HTTP server comms response
 #
 
 import unittest
 import os
 from subprocess import CalledProcessError
+import multiprocessing
 
 # Dexter specific imports
-from dexter import *
-from getHostInfo import *
-from runSystemCommand import *
-from py2ExeSetup import makeExe
-
+from Dexter.dexter import *
+from Dexter.getHostInfo import *
+from Dexter.runSystemCommand import *
+from Dexter.py2ExeSetup import *
+from Dexter.servers import *
+from Dexter.comms import *
 
 class testRunSystemCommand(unittest.TestCase):
 
@@ -59,7 +61,49 @@ class testMakeExe(unittest.TestCase):
         newPath = makeExe('getHostInfo.py')
         self.assertEqual(exePath, newPath)
         self.assertTrue(os.path.exists(newPath))
+        
 
+# HTTP Comm module test class and helper function     
+def httpTestServer(logfile):
+    p = multiprocessing.current_process()   
+    server = dexterHttpServer.dexterHttpServer('127.0.0.1', 12345, logfile, False)
+    httpd = server.server(('127.0.0.1', 12345), dexterHttpServer.MyHandler)
+    httpd.serve_forever()
+    pass
+
+    
+class testHttpComms(unittest.TestCase):
+
+    def testCheckIn_correct(self):
+        # Setup
+        tempLogFile = 'unittest.log'
+        if os.path.exists(tempLogFile):        
+            os.remove(tempLogFile)
+        serverProcess = multiprocessing.Process(name='HTTP Server', target=httpTestServer, args=(tempLogFile,))
+        serverProcess.daemon = True
+        serverProcess.start()        
+        
+        client = httpModule.httpComm('127.0.0.1', 12345)
+        serverResponse = client.checkIn('DEXTERUNITTEST')
+        
+        # Verify the client received a successful server response
+        self.assertEqual(serverResponse, bytes('Received', 'ascii'))
+        
+        # Verify the server received a successful client message
+        print(tempLogFile)
+        with open(tempLogFile, 'rb') as f:
+            data = f.read().decode('ascii')       
+        self.assertNotEqual(data.find('"POST /dexter.html HTTP/1.1" 200'), -1)
+        self.assertNotEqual(data.find('Successful connection from 127.0.0.1: Dexter DEXTERUNITTEST, reporting for duty!'), -1)
+        
+        # Cleanup
+        f.close()        
+        serverProcess.terminate()
+        os.remove(tempLogFile)
+        pass
+
+        
+        
         
 if __name__ == '__main__':
     unittest.main(buffer=True)

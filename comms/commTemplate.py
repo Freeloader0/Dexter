@@ -11,4 +11,8 @@ class commTemplate():
 
     def __init__(self):
         pass
- 
+    
+    def checkIn(self, dexterId):
+        return 'Not implemented'
+
+

@@ -5,20 +5,23 @@
 import time
 import http.server
 import argparse
-import serverTemplate
+from Dexter.servers import serverTemplate
 
-serverLogFile = ''
 
 class dexterHttpServer(serverTemplate.serverTemplate):
-    def __init__(self, host, port, log):
+    # TODO: Figure out a better way to specify a log file without global variables
+    def __init__(self, host, port, logfile, verboseParam):
         self.host = host
         self.port = port
-        self.log = log
         self.server = http.server.HTTPServer
+        global serverLogFile
+        serverLogFile = logfile
+        global verbose
+        verbose = verboseParam
         pass    
 
 
-class MyHandler(http.server.BaseHTTPRequestHandler):       
+class MyHandler(http.server.BaseHTTPRequestHandler):   
     def do_HEAD(s):
         s.send_response(200)
         s.send_header("Content-type", "text/html")
@@ -51,7 +54,10 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
             
             # Validate if the POST was from a Dexter client
             if s.headers.get_all('User-Agent')[0] == 'Dexter 1.0':
-                print('Client connected: ' + postData)
+                message = 'Successful connection from ' + s.client_address[0] + ': ' + postData
+                if verbose == True:
+                    print(message)
+                serverTemplate.writeServerLog(message, serverLogFile)
                 s.wfile.write(bytes("Received", 'ascii'))
             else:                     
                 s.wfile.write(bytes("Website under construction", 'ascii'))
@@ -59,6 +65,16 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
         else:
             s.send_response(404)  
         pass
+        
+    def log_message(self, format, *args):
+        message = str("%s - - [%s] %s" %
+                (self.address_string(),
+                self.log_date_time_string(),
+                format%args))
+        serverTemplate.writeServerLog(message, serverLogFile)
+        if verbose == True:
+            print(message)
+    pass
 
 
 if __name__ == '__main__':
@@ -67,20 +83,20 @@ if __name__ == '__main__':
     parser.add_argument('host', help='host interface to run server on')
     parser.add_argument('port', type=int, help='port number to run server on')
     parser.add_argument('log', help='path to server log file')
+    parser.add_argument('-v', action='store_true', default=False, help='verbose mode. print incoming connections to the terminal')
     args = parser.parse_args()
-    serverLogFile = args.log
     
     # Start server
-    template = dexterHttpServer(args.host, args.port, args.log)
+    template = dexterHttpServer(args.host, args.port, args.log, args.v)
     httpd = template.server((args.host, args.port), MyHandler)
     print(time.asctime(), "Server Started - %s:%s" % (args.host, args.port))
-    template.writeServerLog("Server Started - %s:%s" % (args.host, args.port))
+    serverTemplate.writeServerLog("Server Started - %s:%s" % (args.host, args.port), serverLogFile)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
         pass
     httpd.server_close()
     print(time.asctime(), "Server Stopped - %s:%s" % (args.host, args.port))
-    template.writeServerLog("Server Stopped - %s:%s" % (args.host, args.port))
+    serverTemplate.writeServerLog("Server Stopped - %s:%s" % (args.host, args.port), serverLogFile)
     pass
 

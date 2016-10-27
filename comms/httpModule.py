@@ -9,12 +9,13 @@ import socket
 import sys
 import binascii
 import argparse
+import json
 
 # Dexter specific imports
 from Dexter.comms import commTemplate
 
 
-class httpComm(commTemplate.commTemplate):
+class commClass(commTemplate.commTemplate):
     # Init function
     def __init__(self, server, port):
         self.server = server
@@ -30,7 +31,7 @@ class httpComm(commTemplate.commTemplate):
                    'Connection' : 'Close'}
                    
         try:
-            req = urllib.request.Request(url, bytes('Dexter ' + dexterId + ', reporting for duty!', 'ascii'), headers)
+            req = urllib.request.Request(url, bytes(dexterId, 'ascii'), headers)
             page = urllib.request.urlopen(req, timeout=20)
             response = page.read()
         except:
@@ -47,7 +48,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     
     mod = httpComm(args.server, args.port)
-    response = mod.checkIn('TESTTESTTEST')
+    response = mod.checkIn(json.dumps(str({'DEXTERID' : 'TESTTESTTEST'})))
     print(response)
     
 

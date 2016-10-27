@@ -5,6 +5,7 @@
 import time
 import http.server
 import argparse
+import json
 from Dexter.servers import serverTemplate
 
 
@@ -50,11 +51,12 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
             s.send_header("Connection", "close")
             s.send_header("Content-type", "text/plain")
             s.end_headers()
-            postData = str(s.rfile.read(int(s.headers.get_all('Content-Length')[0])), 'utf-8')
+            postData = json.loads(str(s.rfile.read(int(s.headers.get_all('Content-Length')[0])), 'utf-8'))
             
             # Validate if the POST was from a Dexter client
-            if s.headers.get_all('User-Agent')[0] == 'Dexter 1.0':
-                message = 'Successful connection from ' + s.client_address[0] + ': ' + postData
+            if postData and s.headers.get_all('User-Agent')[0] == 'Dexter 1.0':
+                #message = 'Successful connection'
+                message = 'Successful connection from ' + s.client_address[0] + ': ' + postData['DEXTERID']
                 if verbose == True:
                     print(message)
                 serverTemplate.writeServerLog(message, serverLogFile)

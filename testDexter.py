@@ -17,6 +17,7 @@ import unittest
 import os
 from subprocess import CalledProcessError
 import multiprocessing
+import json
 
 # Dexter specific imports
 from Dexter.dexter import *
@@ -83,18 +84,17 @@ class testHttpComms(unittest.TestCase):
         serverProcess.daemon = True
         serverProcess.start()        
         
-        client = httpModule.httpComm('127.0.0.1', 12345)
-        serverResponse = client.checkIn('DEXTERUNITTEST')
+        client = httpModule.commClass('127.0.0.1', 12345)
+        serverResponse = client.checkIn(json.dumps({'DEXTERID' : 'TESTTESTTEST'}))
         
         # Verify the client received a successful server response
         self.assertEqual(serverResponse, bytes('Received', 'ascii'))
         
         # Verify the server received a successful client message
-        print(tempLogFile)
         with open(tempLogFile, 'rb') as f:
             data = f.read().decode('ascii')       
         self.assertNotEqual(data.find('"POST /dexter.html HTTP/1.1" 200'), -1)
-        self.assertNotEqual(data.find('Successful connection from 127.0.0.1: Dexter DEXTERUNITTEST, reporting for duty!'), -1)
+        self.assertNotEqual(data.find('Successful connection from 127.0.0.1: TESTTESTTEST'), -1)
         
         # Cleanup
         f.close()        

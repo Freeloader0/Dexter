@@ -1,22 +1,27 @@
 # dexter.py
 # Main module of the Dexter project
 #
+# This file should specify WHAT Dexter should do while other modules
+# will specify HOW Dexter will do it
+#
 
 # Imports
 import datetime
 import os.path
-
+import argparse
+import string
+import json
+import importlib
 
 # Local Dexter imports
 from getHostInfo import *
-
 
 # Global variables
 environ = getHostInfo()
 
 
 # Function to write a string into the Dexter Log
-def writeLog(message):
+def writeLog(message, debug=False):
     message = str(datetime.datetime.now()) + ': ' + message + '\r\n'
     
     # Assert that the log file has been designated
@@ -27,6 +32,10 @@ def writeLog(message):
     try:
         with open(environ['DEXTERLOG'], 'a') as f:
             f.write(message)
+            
+        if debug:
+            print(message)
+            
     except:
         return -1
         
@@ -35,8 +44,41 @@ def writeLog(message):
     
 # Main subroutine    
 def main():
-    writeLog('Dexter Started')
+    #
+    # INITIAL SETUP
+    #
+    # Parse arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('server', help='address of server')
+    parser.add_argument('port', type=int, help='port number of server')    
+    parser.add_argument('comms', help='dexter communications module to use')
+    parser.add_argument('--beaconInterval', type=int, default=60, help='interval between beacons, in seconds.  defaults to 60')
+    parser.add_argument('--debug', action='store_true', default=False, help='flag to print dexter debug messages')
+    args = parser.parse_args()
+    debug = args.debug
     
+    environ['BEACON'] = args.beaconInterval
+    environ['DEXTERSERVER'] = args.server
+    environ['DEXTERPORT'] = args.port
+    # TODO: Add initial command as a command-line argument.  Should this be JSON?
+    
+    # TODO: Dynamic comm module loading
+    # ALSO: Make an HTTPS mod to test multiple comms mods
+    #commModule = args.comms.httpComm
+    commLib = importlib.import_module('comms.' + args.comms)
+    commModule = commLib.commClass(args.server, args.port)
+    
+    writeLog('Dexter Started', debug)
+    
+    commModule.checkIn(json.dumps({'DEXTERID' : environ['DEXTERID'], 'ENVIRONMENT' : environ}))
+    
+    #
+    # Main Control Loop
+    #
+    #print(json.dumps(str({'DEXTERID' : environ['DEXTERID'], 'ENVIRONMENT' : environ})))
+    #print(json.dumps(str({'DEXTERID' : environ['DEXTERID']})))
+    
+    writeLog('Dexter Stopped', debug)
     pass
 
 if __name__ == '__main__':

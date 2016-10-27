@@ -15,4 +15,5 @@ class commTemplate():
     def checkIn(self, dexterId):
         return 'Not implemented'
 
-
+    def sendEnvironment(self, environString):
+        return 'Not implemented'

@@ -11,6 +11,7 @@ import os.path
 import argparse
 import string
 import json
+import yaml
 import importlib
 
 # Local Dexter imports
@@ -52,24 +53,24 @@ def main():
     parser.add_argument('server', help='address of server')
     parser.add_argument('port', type=int, help='port number of server')    
     parser.add_argument('comms', help='dexter communications module to use')
-    parser.add_argument('--beaconInterval', type=int, default=60, help='interval between beacons, in seconds.  defaults to 60')
+    parser.add_argument('--environ', type=yaml.load, help='manual environment settings specified as a YAML dictionary {KEY: VALUE}')
     parser.add_argument('--debug', action='store_true', default=False, help='flag to print dexter debug messages')
     args = parser.parse_args()
     debug = args.debug
     
-    environ['BEACON'] = args.beaconInterval
+    # Environment setup
+    environ['BEACON'] = 60
     environ['DEXTERSERVER'] = args.server
     environ['DEXTERPORT'] = args.port
-    # TODO: Add initial command as a command-line argument.  Should this be JSON?
-    # ALSO: Make an HTTPS mod to test multiple comms mods
-    
+    for a in args.environ.keys():
+        environ[a] = args.environ[a]
+        
+    # TODO: Make an HTTPS mod to test multiple comms mods
     commLib = importlib.import_module('comms.' + args.comms)
     commModule = commLib.commClass(args.server, args.port)
     
     writeLog('Dexter Started', debug)
-    
     response = commModule.checkIn({'DEXTERID' : environ['DEXTERID'], 'ENVIRONMENT' : environ})
-    print(response)
     
     #
     # Main Control Loop

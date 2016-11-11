@@ -85,16 +85,52 @@ class testHttpComms(unittest.TestCase):
         serverProcess.start()        
         
         client = httpModule.commClass('127.0.0.1', 12345)
-        serverResponse = client.checkIn(json.dumps({'DEXTERID' : 'TESTTESTTEST'}))
+        serverResponse = client.checkIn({'DEXTERID' : 'TESTTESTTEST'})
         
         # Verify the client received a successful server response
-        self.assertEqual(serverResponse, bytes('Received', 'ascii'))
+        self.assertEqual(serverResponse, {'Status' : 'Received'})
         
         # Verify the server received a successful client message
         with open(tempLogFile, 'rb') as f:
             data = f.read().decode('ascii')       
         self.assertNotEqual(data.find('"POST /dexter.html HTTP/1.1" 200'), -1)
         self.assertNotEqual(data.find('Successful connection from 127.0.0.1: TESTTESTTEST'), -1)
+        
+        # Cleanup
+        f.close()        
+        serverProcess.terminate()
+        os.remove(tempLogFile)
+        pass
+        
+    def testCheckIn_noServer(self):
+        # Setup     
+        client = httpModule.commClass('127.0.0.1', 12345)
+        serverResponse = client.checkIn({'DEXTERID' : 'TESTTESTTEST'})
+        
+        # Verify the client received a failure response
+        self.assertEqual(serverResponse, {'Status' : 'Failed'})
+        pass
+    
+    def testCheckIn_noDexterId(self):
+        # Setup
+        tempLogFile = 'unittest.log'
+        if os.path.exists(tempLogFile):        
+            os.remove(tempLogFile)
+        serverProcess = multiprocessing.Process(name='HTTP Server', target=httpTestServer, args=(tempLogFile,))
+        serverProcess.daemon = True
+        serverProcess.start()        
+        
+        client = httpModule.commClass('127.0.0.1', 12345)
+        serverResponse = client.checkIn({'NOTANID' : 'TESTTESTTEST'})
+        
+        # Verify the client received a successful server response
+        self.assertEqual(serverResponse, {'Status' : 'Failed'})
+        
+        # Verify the server received a successful client message
+        with open(tempLogFile, 'rb') as f:
+            data = f.read().decode('ascii')
+        self.assertNotEqual(data.find('"POST /dexter.html HTTP/1.1" 200'), -1)
+        self.assertNotEqual(data.find('Improperly formatted connection from 127.0.0.1'), -1)
         
         # Cleanup
         f.close()        

@@ -61,22 +61,19 @@ def main():
     environ['DEXTERSERVER'] = args.server
     environ['DEXTERPORT'] = args.port
     # TODO: Add initial command as a command-line argument.  Should this be JSON?
-    
-    # TODO: Dynamic comm module loading
     # ALSO: Make an HTTPS mod to test multiple comms mods
-    #commModule = args.comms.httpComm
+    
     commLib = importlib.import_module('comms.' + args.comms)
     commModule = commLib.commClass(args.server, args.port)
     
     writeLog('Dexter Started', debug)
     
-    commModule.checkIn(json.dumps({'DEXTERID' : environ['DEXTERID'], 'ENVIRONMENT' : environ}))
+    response = commModule.checkIn({'DEXTERID' : environ['DEXTERID'], 'ENVIRONMENT' : environ})
+    print(response)
     
     #
     # Main Control Loop
     #
-    #print(json.dumps(str({'DEXTERID' : environ['DEXTERID'], 'ENVIRONMENT' : environ})))
-    #print(json.dumps(str({'DEXTERID' : environ['DEXTERID']})))
     
     writeLog('Dexter Stopped', debug)
     pass

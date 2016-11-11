@@ -12,7 +12,7 @@ class commTemplate():
     def __init__(self):
         pass
     
-    def checkIn(self, dexterId):
+    def checkIn(self, dexterData):
         return 'Not implemented'
 
     def sendEnvironment(self, environString):

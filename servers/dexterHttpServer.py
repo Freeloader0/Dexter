@@ -54,18 +54,21 @@ class MyHandler(http.server.BaseHTTPRequestHandler):
             postData = json.loads(str(s.rfile.read(int(s.headers.get_all('Content-Length')[0])), 'utf-8'))
             
             # Validate if the POST was from a Dexter client
-            if postData and s.headers.get_all('User-Agent')[0] == 'Dexter 1.0':
-                #message = 'Successful connection'
+            if postData and 'DEXTERID' in postData.keys() and s.headers.get_all('User-Agent')[0] == 'Dexter 1.0':
                 message = 'Successful connection from ' + s.client_address[0] + ': ' + postData['DEXTERID']
                 if verbose == True:
                     print(message)
                 serverTemplate.writeServerLog(message, serverLogFile)
-                s.wfile.write(bytes("Received", 'ascii'))
+                s.wfile.write(bytes(json.dumps({'Status' : 'Received'}), 'ascii'))
             else:                     
+                message = 'Improperly formatted connection from ' + s.client_address[0]
+                if verbose == True:
+                    print(message)                
+                serverTemplate.writeServerLog(message, serverLogFile)
                 s.wfile.write(bytes("Website under construction", 'ascii'))
             
         else:
-            s.send_response(404)  
+            s.send_response(404)
         pass
         
     def log_message(self, format, *args):

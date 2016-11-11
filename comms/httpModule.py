@@ -23,19 +23,22 @@ class commClass(commTemplate.commTemplate):
         pass
 
     # Function to query for tasking
-    def checkIn(self, dexterId):
+    def checkIn(self, dexterData):
+        payload = json.dumps(dexterData)
+    
         # HTTP POST request setup
         url = 'http://' + str(self.server) + ':' + str(self.port) + '/dexter.html'
         headers = {'User-Agent' : 'Dexter 1.0',
-                   'Accept-Encoding' : 'gzip',
+                   'Accept-Encoding' : 'json',
                    'Connection' : 'Close'}
                    
         try:
-            req = urllib.request.Request(url, bytes(dexterId, 'ascii'), headers)
+            req = urllib.request.Request(url, bytes(payload, 'ascii'), headers)
             page = urllib.request.urlopen(req, timeout=20)
-            response = page.read()
+            data = page.read()
+            response = json.loads(str(data, 'utf-8'))
         except:
-            response = 'Failed'
+            response = {'Status' : 'Failed'}
             
         return response
 
@@ -47,8 +50,8 @@ if __name__ == '__main__':
     parser.add_argument('port', type=int, help='port number of server')
     args = parser.parse_args()
     
-    mod = httpComm(args.server, args.port)
-    response = mod.checkIn(json.dumps(str({'DEXTERID' : 'TESTTESTTEST'})))
+    mod = commClass(args.server, args.port)
+    response = mod.checkIn({'DEXTERID' : 'TESTTESTTEST'})
     print(response)
     
 

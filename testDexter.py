@@ -123,10 +123,10 @@ class testHttpComms(unittest.TestCase):
         client = httpModule.commClass('127.0.0.1', 12345)
         serverResponse = client.checkIn({'NOTANID' : 'TESTTESTTEST'})
         
-        # Verify the client received a successful server response
+        # Verify the client received a failed to send response
         self.assertEqual(serverResponse, {'Status' : 'Failed'})
         
-        # Verify the server received a successful client message
+        # Verify the server received an improperly formatted client message
         with open(tempLogFile, 'rb') as f:
             data = f.read().decode('ascii')
         self.assertNotEqual(data.find('"POST /dexter.html HTTP/1.1" 200'), -1)

@@ -5,15 +5,15 @@
 
 import datetime
 import os.path
+import json
 
 class serverTemplate():
 
-    def __init__(self, host, port):
-        self.host = host
-        self.port = port
+    def __init__(self):
         self.server = None
         pass
-    
+
+
 # Function to write a string into the server log
 def writeServerLog(message, log):
     message = str(datetime.datetime.now()) + ': ' + message + '\r\n'
@@ -26,3 +26,13 @@ def writeServerLog(message, log):
         return -1
         
     return 0
+
+
+# Function to parse JSON-formatted server configuration files
+def readConfigFile(configFile):
+    configData = None
+    with open(configFile, 'rb') as f:
+        configData = json.loads(str(f.read(), 'utf-8'))
+    f.close()
+    
+    return configData

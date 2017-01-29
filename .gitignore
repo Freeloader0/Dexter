@@ -57,3 +57,4 @@ dist
 # Local testing files
 hello.py
 servers\server.log
+*.txt

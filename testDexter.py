@@ -18,6 +18,7 @@ import os
 from subprocess import CalledProcessError
 import multiprocessing
 import json
+import tempfile
 
 # Dexter specific imports
 from Dexter.dexter import *
@@ -65,10 +66,10 @@ class testMakeExe(unittest.TestCase):
         
 
 # HTTP Comm module test class and helper function     
-def httpTestServer(logfile):
-    p = multiprocessing.current_process()   
-    server = dexterHttpServer.dexterHttpServer('127.0.0.1', 12345, logfile, False)
-    httpd = server.server(('127.0.0.1', 12345), dexterHttpServer.MyHandler)
+def httpTestServer(configFile):
+    p = multiprocessing.current_process()
+    template = dexterHttpServer.dexterHttpTemplate(configFile, verbose=False)
+    httpd = template.server((template.host, template.port), dexterHttpServer.MyHandler)
     httpd.serve_forever()
     pass
 
@@ -77,12 +78,14 @@ class testHttpComms(unittest.TestCase):
 
     def testCheckIn_correct(self):
         # Setup
-        tempLogFile = 'unittest.log'
-        if os.path.exists(tempLogFile):        
-            os.remove(tempLogFile)
-        serverProcess = multiprocessing.Process(name='HTTP Server', target=httpTestServer, args=(tempLogFile,))
+        tempLogFile = 'dexterTestLogFile.txt'
+        tempConfigFile = open('dexterTestConfigFile.txt', 'wb')
+        tempConfigFile.write(json.dumps({'host' : '127.0.0.1', 'port' : 12345, 'logfile' : tempLogFile}).encode('utf-8'))
+        tempConfigFile.flush()
+        tempConfigFile.close()
+        serverProcess = multiprocessing.Process(name='HTTP Server', target=httpTestServer, args=('dexterTestConfigFile.txt',))
         serverProcess.daemon = True
-        serverProcess.start()        
+        serverProcess.start()
         
         client = httpModule.commClass('127.0.0.1', 12345)
         serverResponse = client.checkIn({'DEXTERID' : 'TESTTESTTEST'})
@@ -91,17 +94,17 @@ class testHttpComms(unittest.TestCase):
         self.assertEqual(serverResponse, {'Status' : 'Received'})
         
         # Verify the server received a successful client message
-        with open(tempLogFile, 'rb') as f:
-            data = f.read().decode('ascii')       
+        with open(tempLogFile, 'rb') as tempLogFileHandle:
+            data = tempLogFileHandle.read().decode('utf-8')
         self.assertNotEqual(data.find('"POST /dexter.html HTTP/1.1" 200'), -1)
         self.assertNotEqual(data.find('Successful connection from 127.0.0.1: TESTTESTTEST'), -1)
         
         # Cleanup
-        f.close()        
         serverProcess.terminate()
+        os.remove('dexterTestConfigFile.txt')
         os.remove(tempLogFile)
         pass
-        
+     
     def testCheckIn_noServer(self):
         # Setup     
         client = httpModule.commClass('127.0.0.1', 12345)
@@ -113,12 +116,14 @@ class testHttpComms(unittest.TestCase):
     
     def testCheckIn_noDexterId(self):
         # Setup
-        tempLogFile = 'unittest.log'
-        if os.path.exists(tempLogFile):        
-            os.remove(tempLogFile)
-        serverProcess = multiprocessing.Process(name='HTTP Server', target=httpTestServer, args=(tempLogFile,))
+        tempLogFile = 'dexterTestLogFile.txt'
+        tempConfigFile = open('dexterTestConfigFile.txt', 'wb')
+        tempConfigFile.write(json.dumps({'host' : '127.0.0.1', 'port' : 12345, 'logfile' : tempLogFile}).encode('utf-8'))
+        tempConfigFile.flush()
+        tempConfigFile.close()
+        serverProcess = multiprocessing.Process(name='HTTP Server', target=httpTestServer, args=('dexterTestConfigFile.txt',))
         serverProcess.daemon = True
-        serverProcess.start()        
+        serverProcess.start()      
         
         client = httpModule.commClass('127.0.0.1', 12345)
         serverResponse = client.checkIn({'NOTANID' : 'TESTTESTTEST'})
@@ -127,17 +132,16 @@ class testHttpComms(unittest.TestCase):
         self.assertEqual(serverResponse, {'Status' : 'Failed'})
         
         # Verify the server received an improperly formatted client message
-        with open(tempLogFile, 'rb') as f:
-            data = f.read().decode('ascii')
+        with open(tempLogFile, 'rb') as tempLogFileHandle:
+            data = tempLogFileHandle.read().decode('utf-8')
         self.assertNotEqual(data.find('"POST /dexter.html HTTP/1.1" 200'), -1)
         self.assertNotEqual(data.find('Improperly formatted connection from 127.0.0.1'), -1)
         
         # Cleanup
-        f.close()        
         serverProcess.terminate()
+        os.remove('dexterTestConfigFile.txt')
         os.remove(tempLogFile)
         pass
-
         
         
         

@@ -12,10 +12,11 @@ import argparse
 import string
 import json
 import yaml
-import importlib
+import sys
 
-# Local Dexter imports
-from getHostInfo import *
+# Dexter imports
+from Dexter.getHostInfo import *
+from Dexter.comms import *
 
 
 # Global variables
@@ -68,7 +69,7 @@ def main():
             environ[a] = args.environ[a]
         
     # TODO: Make an HTTPS mod to test multiple comms mods
-    commLib = importlib.import_module('comms.' + args.comms)
+    commLib = sys.modules['Dexter.comms.' + args.comms]
     commModule = commLib.commClass(args.server, args.port)
     
     writeLog('Dexter Started', debug)
@@ -77,6 +78,7 @@ def main():
     #
     # Main Control Loop
     #
+    # TODO: Make control loop
     
     writeLog('Dexter Stopped', debug)
     pass

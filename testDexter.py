@@ -15,7 +15,7 @@
 
 import unittest
 import os
-from subprocess import CalledProcessError
+import subprocess
 import multiprocessing
 import json
 import tempfile
@@ -32,9 +32,11 @@ class testRunSystemCommand(unittest.TestCase):
 
     def testRunSystemCommand_correct(self):
         self.assertIsInstance(runSystemCommand('ipconfig'), bytes)
+        pass
 
     def testRunSystemCommand_badInput(self):
-        self.assertRaises(CalledProcessError, runSystemCommand, ['del'])        
+        self.assertRaises(subprocess.CalledProcessError, runSystemCommand, ['del'])
+        pass
 
 
 class testGetHostInfo(unittest.TestCase):
@@ -43,6 +45,7 @@ class testGetHostInfo(unittest.TestCase):
         info = getHostInfo()
         self.assertIsInstance(info, dict)
         self.assertTrue('DEXTERID' in info.keys())
+        pass
         
         
 class testDexterWriteLog(unittest.TestCase):
@@ -52,18 +55,8 @@ class testDexterWriteLog(unittest.TestCase):
         self.assertEqual(writeLog('Dexter Test'), 0)
         self.assertIsInstance(environ['DEXTERLOG'], str)
         self.assertTrue(os.path.exists(environ['DEXTERLOG']))
+        pass
 
-        
-class testMakeExe(unittest.TestCase):
-
-    def testMakeExe_correct(self):
-        exePath = os.path.join(os.getcwd(), 'dist', 'getHostInfo.exe')
-        if os.path.exists(exePath):
-            os.remove(exePath)
-        newPath = makeExe('getHostInfo.py')
-        self.assertEqual(exePath, newPath)
-        self.assertTrue(os.path.exists(newPath))
-        
 
 # HTTP Comm module test class and helper function     
 def httpTestServer(configFile):
@@ -107,7 +100,7 @@ class testHttpComms(unittest.TestCase):
      
     def testCheckIn_noServer(self):
         # Setup     
-        client = httpModule.commClass('127.0.0.1', 12345)
+        client = httpModule.commClass('127.0.0.1', 9999)
         serverResponse = client.checkIn({'DEXTERID' : 'TESTTESTTEST'})
         
         # Verify the client received a failure response
@@ -142,7 +135,52 @@ class testHttpComms(unittest.TestCase):
         os.remove('dexterTestConfigFile.txt')
         os.remove(tempLogFile)
         pass
+
         
+class testExe(unittest.TestCase):
+
+    def testMakeExe_correct(self):
+        exePath = os.path.join(os.getcwd(), 'dist', 'dexter.exe')
+        if os.path.exists(exePath):
+            os.remove(exePath)
+        newPath = makeExe('dexter.py')
+        self.assertEqual(exePath, newPath)
+        self.assertTrue(os.path.exists(newPath))
+        pass
+        
+    def testExeCheckin_correct(self):
+        # Exe setup
+        exePath = os.path.join(os.getcwd(), 'dist', 'dexter.exe')
+        if os.path.exists(exePath):
+            os.remove(exePath)
+        newPath = makeExe('dexter.py')
+        self.assertEqual(exePath, newPath)
+        self.assertTrue(os.path.exists(newPath))
+        
+        # Server Setup
+        tempLogFile = 'dexterTestLogFile.txt'
+        tempConfigFile = open('dexterTestConfigFile.txt', 'wb')
+        tempConfigFile.write(json.dumps({'host' : '127.0.0.1', 'port' : 12345, 'logfile' : tempLogFile}).encode('utf-8'))
+        tempConfigFile.flush()
+        tempConfigFile.close()
+        serverProcess = multiprocessing.Process(name='HTTP Server', target=httpTestServer, args=('dexterTestConfigFile.txt',))
+        serverProcess.daemon = True
+        serverProcess.start()
+        
+        # Kick off exe
+        subprocess.call([exePath, '127.0.0.1', '12345', 'httpModule'])
+        
+        # Verify the server received a successful client message
+        with open(tempLogFile, 'rb') as tempLogFileHandle:
+            data = tempLogFileHandle.read().decode('utf-8')
+        self.assertNotEqual(data.find('"POST /dexter.html HTTP/1.1" 200'), -1)
+        self.assertNotEqual(data.find('Successful connection from 127.0.0.1:'), -1)
+        
+        # Cleanup
+        serverProcess.terminate()
+        os.remove('dexterTestConfigFile.txt')
+        os.remove(tempLogFile)
+        pass        
         
         
 if __name__ == '__main__':
